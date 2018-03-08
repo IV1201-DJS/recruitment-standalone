@@ -2,8 +2,8 @@ import { gql } from 'apollo-boost';
 
 export default {
   GET_APPLICATIONS: gql`
-  query {
-    Applications(page: 1, page_size: 3) {
+  query ($page: Int!, $page_size: Int!) {
+    Applications(page: $page, page_size: $page_size) {
       page
       total
       lastPage

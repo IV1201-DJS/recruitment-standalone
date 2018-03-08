@@ -11,6 +11,10 @@ import { UPDATE_STATUS } from './../graphql/mutations';
 class Applications extends Component<Props> {
   props: Props;
 
+  state = {
+    initialFetch: true
+  }
+
   nextPage = async () => {
     const current = this.props.data.Applications;
     const page = current.page + 1;
@@ -82,14 +86,11 @@ class Applications extends Component<Props> {
           <Card>
             <CardContent>
               {(() => {
-                const { data } = this.props;
-                if (data.loading) {
-                  return 'Loading...';
-                }
-                if (data.error) {
-                  return `Error... ${data.error}`;
-                }
-                console.log(data);
+              const { data } = this.props;
+              if (data.loading && !data.Applications) {
+                return 'Loading...';
+              }
+
               return (
                 <Table isStriped isFullWidth>
                   <thead>
@@ -115,7 +116,8 @@ class Applications extends Component<Props> {
 export default graphql(UPDATE_STATUS)(graphql(GET_APPLICATIONS, {
   options: {
     variables: {
-      page: 1
+      page: 1,
+      page_size: 10
     }
   }
 })(Applications));
