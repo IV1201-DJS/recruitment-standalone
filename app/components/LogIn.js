@@ -6,7 +6,7 @@ import { Columns, Column, Button, CardContent, Hero, HeroBody, Container, Card, 
 
 type Props = {};
 
-class Home extends Component<Props> {
+class LogIn extends Component<Props> {
   props: Props;
 
   state = {
@@ -81,4 +81,4 @@ class Home extends Component<Props> {
   }
 }
 
-export default withRouter(Home);
+export default withRouter(LogIn);

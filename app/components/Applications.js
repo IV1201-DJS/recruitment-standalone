@@ -1,54 +1,35 @@
 // @flow
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
-import { gql } from 'apollo-boost';
 import { Query, graphql } from 'react-apollo';
 import { Card, CardContent, Button, Table, Section, Container } from 'bloomer';
 
-const GET_APPLICATIONS = gql`
-query {
-  Applications(page: 1, page_size: 3) {
-    data {
-      id
-      status {
-        id
-        name
-      }
-      user {
-        id
-        firstname
-        lastname
-      }
-    }
-  }
-}
-`;
-
-
-const UPDATE_STATUS = gql`
-mutation ($a: ID!, $s: ID!) {
-  updateApplicationStatus(application_id: $a, new_status: $s) {
-    id
-    status {
-      id
-      name
-    }
-  }
-}
-`;
-
-const wrap = (inner) => (
-  <Section>
-    <Container>
-      <Card>
-        <CardContent>{inner}</CardContent>
-      </Card>
-    </Container>
-  </Section>
-);
+import Paginate from './Paginate';
+import { GET_APPLICATIONS } from './../graphql/queries';
+import { UPDATE_STATUS } from './../graphql/mutations';
 
 class Applications extends Component<Props> {
   props: Props;
+
+  nextPage = async () => {
+    const current = this.props.data.Applications;
+    const page = current.page + 1;
+    const { lastPage } = current;
+    if (page > lastPage) {
+      return;
+    }
+    const newPage = await this.props.data.refetch({ page });
+    console.log(newPage);
+  };
+
+  prevPage = async () => {
+    const page = this.props.data.Applications.page - 1;
+    if (page < 1) {
+      return;
+    }
+    const newPage = await this.props.data.refetch({ page });
+    console.log(newPage);
+  };
 
   renderApplication = (application) => {
     const { firstname, lastname } = application.user;
@@ -68,7 +49,18 @@ class Applications extends Component<Props> {
     const color = accept ? 'success' : 'danger';
     const text = accept ? 'Accept' : 'Reject';
     const newStatus = accept ? '1' : '2';
-    return status ? '' : <Button onClick={() => this.updateStatus(id, newStatus)} isSize="small" isColor={color}>{text}</Button>;
+    if (status) {
+      return '';
+    }
+    return (
+      <Button
+        onClick={() => this.updateStatus(id, newStatus)}
+        isSize="small"
+        isColor={color}
+      >
+        {text}
+      </Button>
+    );
   }
 
   updateStatus = async (a, s) => {
@@ -78,37 +70,52 @@ class Applications extends Component<Props> {
       });
     } catch (err) {
       console.log(err);
+      this.props.history.push('/');
     }
   }
 
   render() {
     return (
-      wrap(<Query query={GET_APPLICATIONS}>
-        {({ loading, error, data }) => {
-          if (loading) {
-            return 'Loading...';
-          }
-          if (error) {
-            return `Error... ${error}`;
-          }
-          console.log(data);
-        return (
-          <Table isStriped isFullWidth>
-            <thead>
-              <tr>
-                <th>Applicant name</th>
-                <th colSpan="3">Application status</th>
-              </tr>
-            </thead>
-            <tbody>
-              { data.Applications.data.map(this.renderApplication) }
-            </tbody>
-          </Table>
-        );
-        }}
-      </Query>)
+      <Section>
+        <Container>
+          <Paginate nextPage={this.nextPage} prevPage={this.prevPage} />
+          <Card>
+            <CardContent>
+              {(() => {
+                const { data } = this.props;
+                if (data.loading) {
+                  return 'Loading...';
+                }
+                if (data.error) {
+                  return `Error... ${data.error}`;
+                }
+                console.log(data);
+              return (
+                <Table isStriped isFullWidth>
+                  <thead>
+                    <tr>
+                      <th>Applicant name</th>
+                      <th colSpan="3">Application status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    { data.Applications.data.map(this.renderApplication) }
+                  </tbody>
+                </Table>
+              );
+              })()}
+            </CardContent>
+          </Card>
+        </Container>
+      </Section>
     );
   }
 }
 
-export default graphql(UPDATE_STATUS)(Applications);
+export default graphql(UPDATE_STATUS)(graphql(GET_APPLICATIONS, {
+  options: {
+    variables: {
+      page: 1
+    }
+  }
+})(Applications));

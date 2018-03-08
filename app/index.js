@@ -5,6 +5,7 @@ import { ApolloProvider } from 'react-apollo';
 import { AppContainer } from 'react-hot-loader';
 import Root from './containers/Root';
 import { configureStore, history } from './store/configureStore';
+import './components/app.global.css';
 
 const store = configureStore();
 
@@ -16,6 +17,9 @@ const client = new ApolloClient({
         Authorization: `Bearer ${token}`
       }
     });
+  },
+  onError: () => {
+    history.push('/');
   },
   uri: 'http://localhost:3333/graphql'
 });
