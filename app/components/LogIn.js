@@ -20,7 +20,6 @@ class LogIn extends Component<Props> {
   logIn = async (e) => {
     e.preventDefault();
     this.setState({ loading: true });
-    console.log('log in');
     try {
       const response = await axios.post('http://localhost:3333/api/login/', this.state.form);
       localStorage.token = response.data.token;
